@@ -114,10 +114,20 @@ def getBestKey(encryptedMessage):
     
     score = 0
 
-  return max(possibleKeys, key = possibleKeys.get)
+  if not possibleKeys:
+    print "No best key found, using 0."
+    return 0
+
+  bestKey = max(possibleKeys, key = possibleKeys.get)
+
+  return bestKey
+
 
 def tryDecrypt(encryptedMessage):
   key = getBestKey(encryptedMessage)
+  if key == 0:
+    return (encryptedMessage,key)
+
   decryptedMessage = decrypt(encryptedMessage,key)
   return (decryptedMessage, key)
 
