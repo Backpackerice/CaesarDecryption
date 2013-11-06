@@ -17,4 +17,4 @@ Or:
 	
 Or:
 
-	python server.py --port 60000 --dictionnary dico.txt --key 1
+	python server.py --port 60000 --dictionary dico.txt --key 1
