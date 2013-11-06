@@ -57,40 +57,12 @@ characterOccur = {
 "z": 0.07
 }
 
-encryptedCharacters = [
-"a",
-"b",
-"c",
-"d",
-"e",
-"f",
-"g",
-"h",
-"i",
-"j",
-"k",
-"l",
-"m",
-"n",
-"o",
-"p",
-"q",
-"r",
-"s",
-"t",
-"u",
-"v",
-"w",
-"x",
-"y",
-"z"
-]
 ###################
 def decrypt(encryptedMessage,key):
   decryptedMessage = ""
   
   for character in encryptedMessage:
-    if character in encryptedCharacters:
+    if re.match("[a-z]",character) is not None:
       asciiNumberOfCharacter = ord(character) - 96
       asciiNumberOfDecryptedCharacter = (asciiNumberOfCharacter - key) % 26 or 26
       decryptedCharacter = chr(asciiNumberOfDecryptedCharacter + 96)
