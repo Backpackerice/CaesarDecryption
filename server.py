@@ -3,28 +3,29 @@ import time
 from socket import *
 import sys
 import argparse
+import re
 ###################
 parser = argparse.ArgumentParser(description='Server receives an encrypted message with Cesar algorithm, using the unknown key, and prints the best encrypted result.')
 parser.add_argument('-p','--port',type=int, help='The port the server is listening on.', required=True)
 parser.add_argument('-k','--key',type=int, help='The key we encrypt the message with', required=False)
-parser.add_argument('-d','--dictionnary', help='The dictionnary we will use to decrypt the message', required=False)
+parser.add_argument('-d','--dictionary', help='The dictionary we will use to decrypt the message', required=False)
 args = vars(parser.parse_args())
 
 isKeyGiven = not(args["key"] is None)
-isDictionnaryGiven = not(args["dictionnary"] is None)
+isDictionaryGiven = not(args["dictionary"] is None)
 
 if not isKeyGiven:
   print "No key given."
 else:
   print "Key given: " + str(args["key"])
 
-if not isDictionnaryGiven:
-  print "No dictionnary given."
+if not isDictionaryGiven:
+  print "No dictionary given."
 else:
-  print "Dictionnary given: " + args["dictionnary"]
+  print "Dictionary given: " + args["dictionary"]
 
-if (not isKeyGiven) and (not isDictionnaryGiven):
-  print "You have to give either a key or a dictionnary to be able to decrypt the message."
+if (not isKeyGiven) and (not isDictionaryGiven):
+  print "You have to give either a key or a dictionary to be able to decrypt the message."
   sys.exit(0)
 ###################
 characterOccur = {
@@ -114,21 +115,37 @@ def getOccurencesFromMessage(message):
   
   return occur
 
-def getDictionnary(filename):
+def getDictionary(filename):
   with open(filename) as f:
-    dictionnary = f.readlines()
-  return dictionnary
+    dictionary = f.readlines()
+  return dictionary
+
+def isWordInDictionary(word):
+  dictionary = getDictionary(args["dictionary"])
+  if word + "\n" in dictionary:
+    return True
+  else:
+    return False
+
+def getBestKey(encryptedMessage):
+  encryptedWords = re.split("\W+", encryptedMessage)
+  possibleKeys = {}
+  keyScore = 0
+  for encryptedWord in encryptedWords:
+    for possibleKey in range(26):
+      possibleDecryptedWord = decrypt(encryptedWord, possibleKey)
+      if isWordInDictionary(possibleDecryptedWord):
+        keyScore += 1
+        possibleKeys[possibleKey] = keyScore
+    
+    score = 0
+
+  return max(possibleKeys, key = possibleKeys.get)
 
 def tryDecrypt(encryptedMessage):
-  decryptedMessages = []
-  dictionnary = getDictionnary(args["dictionnary"])
-  for possibleKey in range(26):
-    possibleMessage = decrypt(encryptedMessage,possibleKey)
-   # print "Possible message: " + possibleMessage + " with key: " + str(possibleKey)
-    if possibleMessage+"\n" in dictionnary:
-      decryptedMessages.append(possibleMessage)
-
-  return decryptedMessages
+  key = getBestKey(encryptedMessage)
+  decryptedMessage = decrypt(encryptedMessage,key)
+  return (decryptedMessage, key)
 
 
 ###################
@@ -149,10 +166,8 @@ while True:
       decryptedMessage = decrypt(data,args["key"])
       print "Decrypted message: " + decryptedMessage + " with key: " + str(args["key"]) + "."
     else:
-      decryptedMessages = tryDecrypt(data)
-      print "Decrypted possible messages: \n:" 
-      print decryptedMessages
-      print " with dictionnary: " + str(args["dictionnary"]) + "."
+      (decryptedMessage,key) = tryDecrypt(data)
+      print "Decrypted message: '" + decryptedMessage + "' with key " + str(key) + " determined with dictionary '" + args["dictionary"] + "'"
 
   except KeyboardInterrupt:
     print "\nThe end.\n"
